@@ -1,0 +1,1 @@
+ffuf -u http://test.com/login.php?FUZZ=test123 -w param.txt -fs 0
