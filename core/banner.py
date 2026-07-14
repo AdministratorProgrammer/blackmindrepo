@@ -11,19 +11,16 @@ from rich.text import Text
 console = Console()
 
 BANNER = r"""
-:::::::::       :::                 :::           ::::::::       :::    :::      ::::    ::::       :::::::::::      ::::    :::      :::::::::  
-:+:    :+:      :+:               :+: :+:        :+:    :+:      :+:   :+:       +:+:+: :+:+:+          :+:          :+:+:   :+:      :+:    :+: 
-+:+    +:+      +:+              +:+   +:+       +:+             +:+  +:+        +:+ +:+:+ +:+          +:+          :+:+:+  +:+      +:+    +:+ 
-+#++:++#+       +#+             +#++:++#++:      +#+             +#++:++         +#+  +:+  +#+          +#+          +#+ +:+ +#+      +#+    +:+ 
-+#+    +#+      +#+             +#+     +#+      +#+             +#+  +#+        +#+       +#+          +#+          +#+  +#+#+#      +#+    +#+ 
-#+#    #+#      #+#             #+#     #+#      #+#    #+#      #+#   #+#       #+#       #+#          #+#          #+#   #+#+#      #+#    #+# 
-#########       ##########      ###     ###       ########       ###    ###      ###       ###      ###########      ###    ####      #########  
+  ___   _        _      ___   _  __  __  __   ___   _  _   ___
+ | _ ) | |      /_\    / __| | |/ / |  \/  | |_ _| | \| | |   \
+ | _ \ | |__   / _ \  | (__  | ' <  | |\/| |  | |  | .` | | |) |
+ |___/ |____| /_/ \_\  \___| |_|\_\ |_|  |_| |___| |_|\_| |___/
 """.strip("\n")
 
 
 def build_banner():
     """
-    Возвращает список строк Rich Text.
+    Создаёт баннер.
     """
     return [
         Text(line, style=Style(color="bright_cyan"))
@@ -32,55 +29,59 @@ def build_banner():
 
 
 def render(lines):
+    """
+    Собирает список строк в один объект Rich Text.
+    """
     return Text("\n").join(lines)
 
 
 def glitch_banner_rich():
     """
-    Показывает баннер.
-
-    • 2 секунды случайные CRT-глитчи
-    • затем баннер остаётся на экране
+    Показывает баннер с редкими глитчами в течение 2 секунд.
+    После окончания анимации баннер остаётся на экране.
     """
 
     original = build_banner()
 
-    start = time.time()
+    start_time = time.time()
 
     with Live(
         render(original),
         console=console,
-        refresh_per_second=60,
         screen=False,
         auto_refresh=False,
+        refresh_per_second=60,
     ) as live:
 
-        while time.time() - start < 2:
+        while time.time() - start_time < 2:
 
             frame = []
+
+            glitch_now = random.random() < 0.25
 
             for line in original:
 
                 new_line = line.copy()
 
-                # Иногда смещаем строку
-                if random.random() < 0.12:
+                if glitch_now and random.random() < 0.4:
 
-                    offset = random.randint(-5, 5)
+                    shift = random.randint(1, 6)
 
-                    if offset > 0:
-                        new_line = Text(
-                            " " * offset,
-                            style=Style(color="bright_cyan"),
-                        ) + new_line
+                    new_line = (
+                        Text(
+                            " " * shift,
+                            style=Style(color="bright_cyan")
+                        )
+                        + new_line
+                    )
 
                 frame.append(new_line)
 
             live.update(render(frame))
             live.refresh()
 
-            time.sleep(random.uniform(0.04, 0.08))
+            time.sleep(random.uniform(0.05, 0.10))
 
-        # Финальный кадр остаётся
+        # Финальный кадр без глитчей
         live.update(render(original))
         live.refresh()
