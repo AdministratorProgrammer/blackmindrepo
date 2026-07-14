@@ -1,6 +1,6 @@
-from colorama import Fore, Style, init
 from core import banner
-init(autoreset=True)
 
-banner.glitch_banner("BLACKMIND")
-print(f"{Style.BRIGHT}{Fore.YELLOW} • BlackMind Repository v1.0 • {Style.RESET_ALL}")
+if __name__ == "__main__":
+    from rich import print as rprint
+    rprint("[bold yellow]Начинаю глитч-анимацию...[/bold yellow]")
+    banner.glitch_banner_rich("BLACKMIND")

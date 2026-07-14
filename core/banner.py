@@ -1,10 +1,11 @@
 import time
 import random
-from colorama import init, Fore, Back, Style
+from rich.live import Live
+from rich.text import Text
+from rich.console import Console
+from rich.style import Style as RichStyle
 
-init(autoreset=True)
-
-# --- Твои буквы (ровно те, что в комментарии) ---
+# Буквы остаются твои, без ANSI-кодов
 letters = {
     'B': [
         " ___  ",
@@ -71,69 +72,56 @@ letters = {
     ]
 }
 
-# Цвета по буквам (можно менять)
+# Цвета для rich (названия цветов или hex)
 color_of = {
-    'B': Fore.CYAN,
-    'L': Fore.RED,
-    'A': Fore.YELLOW,
-    'C': Fore.GREEN,
-    'K': Fore.BLUE,
-    'M': Fore.MAGENTA,
-    'I': Fore.WHITE,
-    'N': Fore.CYAN,
-    'D': Fore.CYAN
+    'B': 'cyan',
+    'L': 'red',
+    'A': 'yellow',
+    'C': 'green',
+    'K': 'blue',
+    'M': 'magenta',
+    'I': 'white',
+    'N': 'cyan',
+    'D': 'cyan'
 }
 
-def build_banner(word, letter_height=5):
-    """Собирает слово из больших букв в одну строку (с цветом)."""
-    lines = ["" for _ in range(letter_height)]
+def build_banner_rich(word):
+    """Собирает баннер как список Rich Text объектов (по одному на строку)."""
+    height = 5
+    lines = [Text() for _ in range(height)]
     for ch in word.upper():
         if ch not in letters:
             continue
-        color = color_of.get(ch, '')
+        color = color_of.get(ch, 'white')
         art = letters[ch]
-        for i in range(letter_height):
-            lines[i] += f"{color}{art[i]}{Style.RESET_ALL}"
-    return lines   # возвращаем список строк, а не одну строку с \n
+        for i in range(height):
+            lines[i].append(art[i], style=RichStyle(color=color))
+    return lines
 
-# ---------- Глитч-анимация баннера ----------
-def glitch_banner(word="BLACKMIND", glitch_prob=0.2, sleep_range=(0.05, 0.2)):
-    original_lines = build_banner(word)
-    height = len(original_lines)
-    max_width = max(len(line) for line in original_lines)
-
-    # Скрываем курсор (может не сработать в cmd, но не мешает)
-    print('\033[?25l', end='')
-
+def glitch_banner_rich(word="BLACKMIND", glitch_prob=0.2, sleep_range=(0.05, 0.2)):
+    original_lines = build_banner_rich(word)
     glitch_chars = '!@#$%^&*()_+-=~`|\\/<>'
+    console = Console()
 
-    # Первый кадр рисуем без лишних движений
-    for line in original_lines:
-        print(line)
-
-    try:
+    # Live auto_refresh=False позволяет обновлять экран только когда мы сами захотим
+    with Live(console=console, screen=False, auto_refresh=False) as live:
         while True:
-            # Поднимаемся на height строк вверх, чтобы оказаться в начале баннера
-            print(f"\033[{height}A", end='')
-
-            for line in original_lines:
+            new_lines = []
+            for orig_line in original_lines:
+                # Получаем чистый текст без стилей
+                plain = orig_line.plain
+                # Заменяем символы
                 glitched = ''.join(
-                    c if random.random() > glitch_prob
-                    else random.choice(glitch_chars)
-                    for c in line
+                    c if random.random() > glitch_prob else random.choice(glitch_chars)
+                    for c in plain
                 )
-                shift = random.randint(0, 3)
-                bg = random.choice([Back.BLACK, Back.RED, Back.GREEN, Back.BLUE])
+                # Иногда полная замена на 0/1
                 if random.random() < 0.1:
-                    glitched = ''.join(random.choices('01', k=len(line)))
-                output = " " * shift + f"{bg}{glitched}{Style.RESET_ALL}"
-                # Дополняем до max_width + shift, чтобы затирать предыдущий кадр
-                output = output.ljust(max_width + shift)
-                print(output)
-
+                    glitched = ''.join(random.choices('01', k=len(plain)))
+                # Сохраняем оригинальный стиль строки (или можно рандомизировать фон)
+                new_line = Text(glitched, style=orig_line.style)
+                new_lines.append(new_line)
+            # Собираем один Text с переносами строк и обновляем
+            frame = Text('\n').join(new_lines)
+            live.update(frame)
             time.sleep(random.uniform(*sleep_range))
-    except KeyboardInterrupt:
-        # Спускаемся на height строк вниз (чтобы не остаться внутри баннера)
-        print(f"\033[{height}B", end='')
-        print('\033[?25h', end='')   # показать курсор
-        print("\nГлитч остановлен.")
