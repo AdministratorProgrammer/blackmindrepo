@@ -50,14 +50,14 @@ def glitch_banner_rich():
         console=console,
         screen=False,
         auto_refresh=False,
-        refresh_per_second=60,
+        refresh_per_second=25,
     ) as live:
 
         while time.time() - start_time < 2:
 
             frame = []
 
-            glitch_now = random.random() < 0.25
+            glitch_now = random.random() < 0.375
 
             for line in original:
 
