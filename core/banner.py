@@ -10,123 +10,50 @@ from rich.text import Text
 
 console = Console()
 
-letters = {
-    "B": [
-        "██████  ",
-        "██   ██ ",
-        "██████  ",
-        "██   ██ ",
-        "██████  ",
-    ],
-    "L": [
-        "██      ",
-        "██      ",
-        "██      ",
-        "██      ",
-        "███████ ",
-    ],
-    "A": [
-        " █████  ",
-        "██   ██ ",
-        "███████ ",
-        "██   ██ ",
-        "██   ██ ",
-    ],
-    "C": [
-        " ██████ ",
-        "██      ",
-        "██      ",
-        "██      ",
-        " ██████ ",
-    ],
-    "K": [
-        "██   ██ ",
-        "██  ██  ",
-        "█████   ",
-        "██  ██  ",
-        "██   ██ ",
-    ],
-    "M": [
-        "███ ███ ",
-        "███████ ",
-        "██ █ ██ ",
-        "██   ██ ",
-        "██   ██ ",
-    ],
-    "I": [
-        "███████ ",
-        "   ██   ",
-        "   ██   ",
-        "   ██   ",
-        "███████ ",
-    ],
-    "N": [
-        "██   ██ ",
-        "███  ██ ",
-        "████ ██ ",
-        "██ ████ ",
-        "██  ███ ",
-    ],
-    "D": [
-        "██████  ",
-        "██   ██ ",
-        "██   ██ ",
-        "██   ██ ",
-        "██████  ",
-    ],
-}
-
-colors = {
-    "B": "cyan",
-    "L": "red",
-    "A": "yellow",
-    "C": "green",
-    "K": "blue",
-    "M": "magenta",
-    "I": "white",
-    "N": "bright_cyan",
-    "D": "cyan",
-}
+BANNER = r"""
+:::::::::       :::                 :::           ::::::::       :::    :::      ::::    ::::       :::::::::::      ::::    :::      :::::::::  
+:+:    :+:      :+:               :+: :+:        :+:    :+:      :+:   :+:       +:+:+: :+:+:+          :+:          :+:+:   :+:      :+:    :+: 
++:+    +:+      +:+              +:+   +:+       +:+             +:+  +:+        +:+ +:+:+ +:+          +:+          :+:+:+  +:+      +:+    +:+ 
++#++:++#+       +#+             +#++:++#++:      +#+             +#++:++         +#+  +:+  +#+          +#+          +#+ +:+ +#+      +#+    +:+ 
++#+    +#+      +#+             +#+     +#+      +#+             +#+  +#+        +#+       +#+          +#+          +#+  +#+#+#      +#+    +#+ 
+#+#    #+#      #+#             #+#     #+#      #+#    #+#      #+#   #+#       #+#       #+#          #+#          #+#   #+#+#      #+#    #+# 
+#########       ##########      ###     ###       ########       ###    ###      ###       ###      ###########      ###    ####      #########  
+""".strip("\n")
 
 
-def build_banner(word: str):
-    height = 5
-    result = [Text() for _ in range(height)]
-
-    for letter in word.upper():
-        art = letters[letter]
-        color = colors.get(letter, "white")
-
-        for i in range(height):
-            result[i].append(
-                art[i] + "  ",
-                style=Style(color=color),
-            )
-
-    return result
+def build_banner():
+    """
+    Возвращает список строк Rich Text.
+    """
+    return [
+        Text(line, style=Style(color="bright_cyan"))
+        for line in BANNER.splitlines()
+    ]
 
 
 def render(lines):
     return Text("\n").join(lines)
 
 
-def shift_line(text: Text, amount: int):
-    t = Text()
+def glitch_banner_rich():
+    """
+    Показывает баннер.
 
-    if amount > 0:
-        t.append(" " * amount)
+    • 2 секунды случайные CRT-глитчи
+    • затем баннер остаётся на экране
+    """
 
-    t.append(text)
-
-    return t
-
-
-def glitch_banner_rich(word="BLACKMIND"):
-    original = build_banner(word)
+    original = build_banner()
 
     start = time.time()
 
-    with Live(render(original), console=console, refresh_per_second=60, screen=False) as live:
+    with Live(
+        render(original),
+        console=console,
+        refresh_per_second=60,
+        screen=False,
+        auto_refresh=False,
+    ) as live:
 
         while time.time() - start < 2:
 
@@ -136,19 +63,24 @@ def glitch_banner_rich(word="BLACKMIND"):
 
                 new_line = line.copy()
 
-                # редко смещаем строку
+                # Иногда смещаем строку
                 if random.random() < 0.12:
-                    offset = random.randint(-4, 4)
+
+                    offset = random.randint(-5, 5)
 
                     if offset > 0:
-                        new_line = shift_line(new_line, offset)
+                        new_line = Text(
+                            " " * offset,
+                            style=Style(color="bright_cyan"),
+                        ) + new_line
 
                 frame.append(new_line)
 
             live.update(render(frame))
+            live.refresh()
 
-            # небольшая задержка
-            time.sleep(random.uniform(0.04, 0.09))
+            time.sleep(random.uniform(0.04, 0.08))
 
-        # финальный баннер остается навсегда
+        # Финальный кадр остаётся
         live.update(render(original))
+        live.refresh()
