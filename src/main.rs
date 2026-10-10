@@ -1,3 +1,5 @@
+mod project;
+
 use clap::Parser;
 use std::io;
 
@@ -18,23 +20,17 @@ struct Cli {
     open: bool
 }
 
-fn create_project(project_name: &str) {
-    println!("\"{project_name}\" project was created.");
-}
-
-fn open_project(project_name &str) {
-    println!("\"{project_name}\" project was opened.");
-}
-
 fn main() -> Result<(), io::Error> {
     let cli = Cli::parse();
 
     // Clap requiered "project_name" parameter (if --no-save or -d is not used).
     // When using --no-save (or -d), this condition is not met.
     if let Some(name) = cli.project_name {
-        open_project(&name);
-    } else {
-        cleate_project(&name);
+        if cli.open {
+            project::general::open_project(&name);
+        } else {
+            project::general::create_project(&name);
+        }
     }
 
     // End of program
