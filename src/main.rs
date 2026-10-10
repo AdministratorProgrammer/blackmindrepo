@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::io;
 
 /// BLACKMINDREPO
 #[derive(Parser)]
@@ -12,14 +13,23 @@ struct Cli {
     no_save: bool,
 }
 
+fn create_project(project_name: String) {
+    println!("\"{project_name}\" project was created.");
+}
 
-fn main() {
+fn main() -> Result<(), io::Error> {
     let cli = Cli::parse();
 
-    let project_name = match cli.project_name {
-        Some(name) => name,
-        None => "tmp".to_string(),
-    };
+    if !cli.no_save {
+        match cli.project_name {
+            Some(name) => create_project(name),
+            None => {
+                println!("Usage: blackmindrepo <PROJECT_NAME> \n");
+                println!("For more information, try '--help'.");
+            }
+        };
+    }
 
-    println!("{}", project_name);
+    // End of program
+    Ok(())
 }
