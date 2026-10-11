@@ -16,6 +16,8 @@ fn main() -> Result<(), io::Error> {
         }
     }
 
+    project::cli::shell();
+
     // End of program
     Ok(())
 }
